@@ -287,6 +287,7 @@
                 this.touchDecayTimer = null;
                 this.touchDecaying = false;
                 this.touchRevealedSquares = new Set();
+                this.touchForceEndTimer = null;
                 this.squares = [];
                 this.flickeringSquares = new Set();
                 this.timers = [];
@@ -391,6 +392,9 @@
                         if (this.touchDecayTimer) {
                             clearTimeout(this.touchDecayTimer);
                         }
+                        if (this.touchForceEndTimer) {
+                            clearTimeout(this.touchForceEndTimer);
+                        }
                         this.touchDecaying = false;
                         this.touchRevealedSquares.clear();
                         this.touchRevealedSquares.clear();
@@ -487,9 +491,12 @@
             }
 
             startTouchDecay() {
-                // Clear any existing decay timer
+                // Clear any existing timers
                 if (this.touchDecayTimer) {
                     clearTimeout(this.touchDecayTimer);
+                }
+                if (this.touchForceEndTimer) {
+                    clearTimeout(this.touchForceEndTimer);
                 }
                 
                 // Reset decay state
@@ -503,11 +510,34 @@
                     }
                 });
                 
-                // Start 8-second timer
+                // Start 8-second timer for random decay
                 this.touchDecayTimer = setTimeout(() => {
                     this.touchDecaying = true;
                     this.randomTouchDecay();
                 }, 8000);
+                
+                // Force complete end after 10 seconds
+                this.touchForceEndTimer = setTimeout(() => {
+                    this.forceEndTouchReveal();
+                }, 10000);
+            }
+
+            forceEndTouchReveal() {
+                // Clear all timers
+                if (this.touchDecayTimer) {
+                    clearTimeout(this.touchDecayTimer);
+                }
+                if (this.touchForceEndTimer) {
+                    clearTimeout(this.touchForceEndTimer);
+                }
+                
+                // Clear all touch revealed squares
+                this.touchRevealedSquares.clear();
+                this.touchDecaying = false;
+                this.isTouch = false;
+                this.mousePos.x = -1000;
+                this.mousePos.y = -1000;
+                this.updateHoverEffect();
             }
 
             randomTouchDecay() {
