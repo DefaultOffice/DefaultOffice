@@ -286,6 +286,7 @@
                 this.isTouch = false;
                 this.touchDecayTimer = null;
                 this.touchDecaying = false;
+                this.touchRevealedSquares = new Set();
                 this.squares = [];
                 this.flickeringSquares = new Set();
                 this.timers = [];
@@ -391,6 +392,9 @@
                             clearTimeout(this.touchDecayTimer);
                         }
                         this.touchDecaying = false;
+                        this.touchRevealedSquares.clear();
+                        this.touchRevealedSquares.clear();
+                        this.touchRevealedSquares.clear();
                         // Cancel decay when user touches again
                         if (this.touchDecayTimer) {
                             clearTimeout(this.touchDecayTimer);
@@ -491,50 +495,43 @@
                 // Reset decay state
                 this.touchDecaying = false;
                 
-                // Start 15-second timer
+                // Identify squares currently revealed by touch
+                this.touchRevealedSquares.clear();
+                this.squares.forEach((square, index) => {
+                    if (this.isSquareInRadius(square)) {
+                        this.touchRevealedSquares.add(index);
+                    }
+                });
+                
+                // Start 8-second timer
                 this.touchDecayTimer = setTimeout(() => {
                     this.touchDecaying = true;
                     this.randomTouchDecay();
-                }, 15000);
+                }, 8000);
             }
 
             randomTouchDecay() {
-                if (!this.touchDecaying || !this.isTouch) return;
-                
-                // Random chance to start fading (20% chance per check)
-                if (Math.random() < 0.2) {
-                    // Gradually move touch position off-screen over 2-4 seconds
-                    const duration = Math.random() * 2000 + 2000; // 2-4 seconds
-                    const startTime = Date.now();
-                    const startX = this.lastTouchPos.x;
-                    const startY = this.lastTouchPos.y;
-                    
-                    const fadeOut = () => {
-                        const elapsed = Date.now() - startTime;
-                        const progress = Math.min(elapsed / duration, 1);
-                        
-                        // Ease out the fade
-                        const easeProgress = 1 - Math.pow(1 - progress, 3);
-                        
-                        // Move position gradually off-screen
-                        this.mousePos.x = startX + ((-1000 - startX) * easeProgress);
-                        this.mousePos.y = startY + ((-1000 - startY) * easeProgress);
-                        this.updateHoverEffect();
-                        
-                        if (progress < 1) {
-                            requestAnimationFrame(fadeOut);
-                        } else {
-                            // Fully faded
-                            this.touchDecaying = false;
-                            this.isTouch = false;
-                        }
-                    };
-                    
-                    fadeOut();
-                } else {
-                    // Try again in 500ms to 2 seconds
-                    setTimeout(() => this.randomTouchDecay(), Math.random() * 1500 + 500);
+                if (!this.touchDecaying || this.touchRevealedSquares.size === 0) {
+                    this.isTouch = false;
+                    this.mousePos.x = -1000;
+                    this.mousePos.y = -1000;
+                    this.updateHoverEffect();
+                    return;
                 }
+                
+                // Random chance to turn off a square (25% chance per check)
+                if (Math.random() < 0.25) {
+                    // Pick a random revealed square to turn off
+                    const revealedArray = Array.from(this.touchRevealedSquares);
+                    const randomIndex = revealedArray[Math.floor(Math.random() * revealedArray.length)];
+                    this.touchRevealedSquares.delete(randomIndex);
+                    
+                    // Update the display
+                    this.updateHoverEffect();
+                }
+                
+                // Continue checking every 300-800ms
+                setTimeout(() => this.randomTouchDecay(), Math.random() * 500 + 300);
             }
 
             updateHoverEffect() {
@@ -548,11 +545,12 @@
                 }
                 
                 // Update square colors
-                this.squares.forEach(square => {
+                this.squares.forEach((square, index) => {
                     const isInRadius = this.isSquareInRadius(square);
                     const isFlickering = this.flickeringSquares.has(square.index);
+                    const isTouchRevealed = this.touchRevealedSquares.has(index);
                     
-                    if (isInRadius || isFlickering) {
+                    if (isInRadius || isFlickering || isTouchRevealed) {
                         square.element.style.backgroundColor = 'transparent';
                     } else {
                         square.element.style.backgroundColor = 'black';
