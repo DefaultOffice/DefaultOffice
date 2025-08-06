@@ -274,11 +274,11 @@
                 this.isMobile = window.innerWidth <= 768;
                 
                 // Mobile adjustments
-                const baseSquares = this.isMobile ? 26 : 32; // 20% larger grid (fewer squares)
+                const baseSquares = this.isMobile ? 21 : 32; // 25% bigger again (fewer squares)
                 this.baseSize = (this.canvasWidth / baseSquares) * 4;
                 
-                // Mobile touch radius is 50% bigger
-                const radiusMultiplier = this.isMobile ? 1.125 : 0.75; // 1.125 = 0.75 * 1.5
+                // Mobile touch radius is 50% bigger again (total 125% bigger than desktop)
+                const radiusMultiplier = this.isMobile ? 1.6875 : 0.75; // 1.6875 = 0.75 * 2.25
                 this.hoverRadius = this.baseSize * radiusMultiplier;
                 
                 this.mousePos = { x: -1000, y: -1000 };
