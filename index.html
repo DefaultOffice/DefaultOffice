@@ -19,6 +19,20 @@
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
 
+        /* Custom cursor */
+        .custom-cursor {
+            position: fixed;
+            width: 8px;
+            height: 8px;
+            background: black;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 200;
+            mix-blend-mode: difference;
+            transition: transform 0.1s ease;
+            opacity: 0;
+        }
+
         #grid-canvas {
             position: fixed;
             top: 0;
@@ -66,27 +80,93 @@
         .loading.hidden {
             display: none;
         }
+
+        /* Logo with invert blend mode */
+        .logo {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 48px;
+            font-weight: 700;
+            color: white;
+            mix-blend-mode: difference;
+            z-index: 100;
+            pointer-events: none;
+            user-select: none;
+            letter-spacing: 2px;
+        }
+
+        /* Background text - on top but black */
+        .background-text {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            width: 300px;
+            font-size: 14px;
+            line-height: 1.6;
+            color: black;
+            z-index: 50;
+            pointer-events: none;
+            user-select: none;
+        }
+
+        /* Social links - bottom right */
+        .social-links {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            z-index: 50;
+        }
+
+        .social-links a {
+            color: black;
+            text-decoration: none;
+            font-size: 14px;
+            pointer-events: auto;
+            transition: opacity 0.2s ease;
+        }
+
+        .social-links a:hover {
+            opacity: 0.7;
+        }
     </style>
 </head>
 <body>
     <div class="loading" id="loading">Generating interactive grid...</div>
+    <div class="custom-cursor" id="custom-cursor"></div>
+    <div class="background-text">
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+    </div>
+    <div class="social-links">
+        <a href="https://instagram.com" target="_blank">Instagram</a>
+        <a href="https://linkedin.com" target="_blank">LinkedIn</a>
+        <a href="https://twitter.com" target="_blank">Twitter</a>
+        <a href="mailto:hello@defaultoffice.com">Email</a>
+    </div>
     <div id="grid-canvas"></div>
+    <div class="logo">Default Office</div>
 
     <script>
         class InteractiveGrid {
             constructor() {
                 this.canvasWidth = window.innerWidth;
                 this.canvasHeight = window.innerHeight;
-                this.baseSize = this.canvasWidth * 0.2; // 20% of screen width
+                this.baseSize = (this.canvasWidth / 32) * 4; // Base size so 32 small (0.25x) squares fit across
                 this.hoverRadius = this.baseSize * 0.75;
                 this.mousePos = { x: -1000, y: -1000 };
                 this.squares = [];
                 this.flickeringSquares = new Set();
                 this.timers = [];
                 this.hoverIndicator = null;
+                this.customCursor = null;
                 
                 this.canvas = document.getElementById('grid-canvas');
                 this.loadingEl = document.getElementById('loading');
+                this.customCursor = document.getElementById('custom-cursor');
                 
                 this.initializeGrid();
                 this.setupEventListeners();
@@ -105,21 +185,17 @@
                 
                 while (y < this.canvasHeight) {
                     let x = 0;
-                    let rowHeight = 0;
                     
                     while (x < this.canvasWidth) {
                         const rand = Math.random();
                         let sizeMultiplier;
-                        if (rand < 0.33) sizeMultiplier = 1;        // Large: 20% width
-                        else if (rand < 0.66) sizeMultiplier = 0.5; // Medium: 10% width
-                        else sizeMultiplier = 0.25;                // Small: 5% width
+                        if (rand < 0.33) sizeMultiplier = 1;        // Large
+                        else if (rand < 0.66) sizeMultiplier = 0.5; // Medium
+                        else sizeMultiplier = 0.25;                // Small
                         
                         const squareSize = sizeMultiplier * this.baseSize;
                         const width = Math.min(squareSize, this.canvasWidth - x);
                         const height = Math.min(squareSize, this.canvasHeight - y);
-                        
-                        // Track the tallest square in this row
-                        rowHeight = Math.max(rowHeight, height);
                         
                         const squareData = {
                             x, y, width, height,
@@ -129,13 +205,13 @@
                             element: null
                         };
                         
-                        // Create DOM element with gap-prevention
+                        // Create DOM element
                         const squareElement = document.createElement('div');
                         squareElement.className = 'grid-square';
-                        squareElement.style.width = Math.ceil(width + 0.5) + 'px'; // Add slight overlap
-                        squareElement.style.height = Math.ceil(height + 0.5) + 'px'; // Add slight overlap
-                        squareElement.style.left = Math.floor(x) + 'px';
-                        squareElement.style.top = Math.floor(y) + 'px';
+                        squareElement.style.width = width + 'px';
+                        squareElement.style.height = height + 'px';
+                        squareElement.style.left = x + 'px';
+                        squareElement.style.top = y + 'px';
                         squareElement.style.backgroundColor = 'black';
                         
                         this.canvas.appendChild(squareElement);
@@ -145,7 +221,7 @@
                         x += width;
                         squareIndex++;
                     }
-                    y += rowHeight; // Use actual row height instead of fixed increment
+                    y += this.baseSize * 0.25; // Use smallest square size for row increment
                 }
                 
                 // Create hover indicator (hidden)
@@ -158,16 +234,22 @@
             }
 
             setupEventListeners() {
-                // Mouse events
-                this.canvas.addEventListener('mousemove', (e) => {
+                // Global mouse move for both cursor and hover effect
+                document.addEventListener('mousemove', (e) => {
                     this.mousePos.x = e.clientX;
                     this.mousePos.y = e.clientY;
+                    this.updateCursor();
                     this.updateHoverEffect();
                 });
-                
-                this.canvas.addEventListener('mouseleave', () => {
+
+                document.addEventListener('mouseenter', () => {
+                    this.customCursor.style.opacity = '1';
+                });
+
+                document.addEventListener('mouseleave', () => {
                     this.mousePos.x = -1000;
                     this.mousePos.y = -1000;
+                    this.customCursor.style.opacity = '0';
                     this.updateHoverEffect();
                 });
 
@@ -209,13 +291,20 @@
                     // Recalculate dimensions
                     this.canvasWidth = window.innerWidth;
                     this.canvasHeight = window.innerHeight;
-                    this.baseSize = this.canvasWidth * 0.2;
+                    this.baseSize = (this.canvasWidth / 32) * 4; // 32 small squares (0.25x) fit across width
                     this.hoverRadius = this.baseSize * 0.75;
                     
                     // Reinitialize
                     this.initializeGrid();
                     this.startFlickering();
                 });
+            }
+
+            updateCursor() {
+                if (this.customCursor && this.mousePos.x > -500) {
+                    this.customCursor.style.left = (this.mousePos.x - 4) + 'px';
+                    this.customCursor.style.top = (this.mousePos.y - 4) + 'px';
+                }
             }
 
             updateHoverEffect() {
