@@ -498,6 +498,13 @@
                                 this.touchTextTimer = setTimeout(() => {
                                     this.isCurrentlyTouchingText = false;
                                 }, 100);
+                            } else {
+                                // Touch is outside text area - start clearing if we were in hotspot
+                                if (this.isOverTextHotspot) {
+                                    this.isOverTextHotspot = false;
+                                    this.isCurrentlyTouchingText = false;
+                                    this.startTextHotspotClear();
+                                }
                             }
                         }
                         
