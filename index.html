@@ -33,20 +33,6 @@
             font-family: 'Suisse Intl', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
 
-        /* Custom cursor */
-        .custom-cursor {
-            position: fixed;
-            width: 8px;
-            height: 8px;
-            background: black;
-            border-radius: 50%;
-            pointer-events: none;
-            z-index: 200;
-            mix-blend-mode: difference;
-            transition: transform 0.1s ease;
-            opacity: 0;
-        }
-
         #grid-canvas {
             position: fixed;
             top: 0;
@@ -72,6 +58,20 @@
             opacity: 0;
         }
 
+        /* Custom cursor */
+        .custom-cursor {
+            position: fixed;
+            width: 8px;
+            height: 8px;
+            background: black;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 200;
+            mix-blend-mode: difference;
+            transition: transform 0.1s ease;
+            opacity: 0;
+        }
+
         /* Hide scrollbars */
         ::-webkit-scrollbar {
             display: none;
@@ -82,32 +82,7 @@
             scrollbar-width: none;
         }
 
-        /* Loading indicator - REMOVED */
-
-        /* Logo with invert blend mode - now handles both text fallback and SVG */
-        .logo {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 48px;
-            font-weight: 700;
-            color: white;
-            mix-blend-mode: difference;
-            z-index: 100;
-            pointer-events: none;
-            user-select: none;
-            letter-spacing: 2px;
-        }
-
-        .logo svg {
-            width: auto;
-            height: 225px;
-            fill: white;
-            mix-blend-mode: difference;
-        }
-
-        /* Background text - on top but black */
+        /* Background text - on top but black with hotspot */
         .background-text {
             position: fixed;
             bottom: 20px;
@@ -117,15 +92,17 @@
             line-height: 1.3;
             color: black;
             z-index: 50;
-            pointer-events: none;
+            pointer-events: auto;
             user-select: none;
             font-family: 'Suisse Intl', sans-serif;
             font-weight: 500;
+            cursor: default;
         }
 
         .background-text .clients {
             font-weight: 300;
             margin-top: 1em;
+            color: black;
         }
 
         /* Social links - bottom right */
@@ -173,6 +150,29 @@
             opacity: 0.5;
         }
 
+        /* Logo with invert blend mode - now handles both text fallback and SVG */
+        .logo {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 48px;
+            font-weight: 700;
+            color: white;
+            mix-blend-mode: difference;
+            z-index: 100;
+            pointer-events: none;
+            user-select: none;
+            letter-spacing: 2px;
+        }
+
+        .logo svg {
+            width: auto;
+            height: 225px;
+            fill: white;
+            mix-blend-mode: difference;
+        }
+
         /* Mobile styles */
         @media (max-width: 768px) {
             .background-text {
@@ -207,10 +207,9 @@
     </style>
 </head>
 <body>
-    <div class="loading" id="loading">Generating interactive grid...</div>
     <div class="custom-cursor" id="custom-cursor"></div>
     <div class="background-text">
-        Default office is an industrial design studio based in West London. Directed by Alex D'Souza and Joe Ground, Default Office works across climate and consumer technology, homeware and furniture. Our design ideology and services are employed by hardware start-ups and international organisations in the US, Europe and Asia.<br><br><span class="clients">Selected Clients: Lunar Energy, Daylight Computer, JosephJoseph, Unilever, Air-Up, Wild Energy, Opal Camera, Tom Dixon.</span>
+        Default office is an industrial design studio based in West London. Directed by Alex D'Souza and Joe Ground, Default Office works across climate and consumer technology, homeware and furniture. Our design ideology and creative services are employed by hardware start-ups and international organisations in the US, Europe and Asia.<br><br><span class="clients">Selected Clients: Lunar Energy, Daylight Computer, JosephJoseph, Unilever, Air-Up, Wild Energy, Opal Camera, Tom Dixon.</span>
     </div>
     <div class="social-links">
         <div class="copyright">Default Office © 2025</div>
@@ -272,6 +271,7 @@
                 document.body.removeChild(tempInput);
             });
         });
+
         class InteractiveGrid {
             constructor() {
                 this.canvasWidth = window.innerWidth;
@@ -293,6 +293,9 @@
                 this.touchDecaying = false;
                 this.touchRevealedSquares = new Set();
                 this.touchForceEndTimer = null;
+                this.isOverTextHotspot = false;
+                this.textHotspotSquares = new Set();
+                this.textHotspotClearTimer = null;
                 this.squares = [];
                 this.flickeringSquares = new Set();
                 this.timers = [];
@@ -403,18 +406,6 @@
                         }
                         this.touchDecaying = false;
                         this.touchRevealedSquares.clear();
-                        this.touchRevealedSquares.clear();
-                        this.touchRevealedSquares.clear();
-                        // Cancel decay when user touches again
-                        if (this.touchDecayTimer) {
-                            clearTimeout(this.touchDecayTimer);
-                        }
-                        this.touchDecaying = false;
-                        // Cancel decay when user touches again
-                        if (this.touchDecayTimer) {
-                            clearTimeout(this.touchDecayTimer);
-                        }
-                        this.touchDecaying = false;
                     }
                 });
 
@@ -436,6 +427,15 @@
                         this.isTouch = true;
                         this.updateCursor();
                         this.updateHoverEffect();
+                        // Cancel decay when user touches again
+                        if (this.touchDecayTimer) {
+                            clearTimeout(this.touchDecayTimer);
+                        }
+                        if (this.touchForceEndTimer) {
+                            clearTimeout(this.touchForceEndTimer);
+                        }
+                        this.touchDecaying = false;
+                        this.touchRevealedSquares.clear();
                     }
                 });
 
@@ -449,6 +449,15 @@
                         this.isTouch = true;
                         this.updateCursor();
                         this.updateHoverEffect();
+                        // Cancel decay when user touches again
+                        if (this.touchDecayTimer) {
+                            clearTimeout(this.touchDecayTimer);
+                        }
+                        if (this.touchForceEndTimer) {
+                            clearTimeout(this.touchForceEndTimer);
+                        }
+                        this.touchDecaying = false;
+                        this.touchRevealedSquares.clear();
                     }
                 });
 
@@ -459,6 +468,24 @@
                     this.updateHoverEffect();
                     this.startTouchDecay();
                 });
+
+                // Text hotspot events
+                const textElement = document.querySelector('.background-text');
+                if (textElement) {
+                    textElement.addEventListener('mouseenter', () => {
+                        this.isOverTextHotspot = true;
+                        // Cancel any ongoing clear process
+                        if (this.textHotspotClearTimer) {
+                            clearTimeout(this.textHotspotClearTimer);
+                        }
+                        this.startTextHotspotEffect();
+                    });
+                    
+                    textElement.addEventListener('mouseleave', () => {
+                        this.isOverTextHotspot = false;
+                        this.startTextHotspotClear();
+                    });
+                }
             }
 
             handleResize() {
@@ -476,11 +503,11 @@
                     this.isMobile = window.innerWidth <= 768;
                     
                     // Mobile adjustments
-                    const baseSquares = this.isMobile ? 26 : 32; // 20% larger grid (fewer squares)
+                    const baseSquares = this.isMobile ? 21 : 32; // 25% bigger again (fewer squares)
                     this.baseSize = (this.canvasWidth / baseSquares) * 4;
                     
-                    // Mobile touch radius is 50% bigger
-                    const radiusMultiplier = this.isMobile ? 1.125 : 0.75; // 1.125 = 0.75 * 1.5
+                    // Mobile touch radius is 50% bigger again (total 125% bigger than desktop)
+                    const radiusMultiplier = this.isMobile ? 1.6875 : 0.75; // 1.6875 = 0.75 * 2.25
                     this.hoverRadius = this.baseSize * radiusMultiplier;
                     
                     // Reinitialize
@@ -489,11 +516,79 @@
                 });
             }
 
-            updateCursor() {
-                if (this.customCursor && this.mousePos.x > -500) {
-                    this.customCursor.style.left = (this.mousePos.x - 4) + 'px';
-                    this.customCursor.style.top = (this.mousePos.y - 4) + 'px';
-                }
+            startTextHotspotEffect() {
+                // Find all squares in the text area
+                const textAreaSquares = [];
+                this.squares.forEach((square, index) => {
+                    if (this.isSquareInTextHotspot(square)) {
+                        textAreaSquares.push(index);
+                    }
+                });
+                
+                // Randomly activate squares over time with higher probability
+                const activateRandomSquares = () => {
+                    if (!this.isOverTextHotspot) return;
+                    
+                    textAreaSquares.forEach(index => {
+                        // Only check squares that aren't already revealed
+                        if (!this.textHotspotSquares.has(index)) {
+                            // 20% chance per check to turn transparent and stay transparent
+                            if (Math.random() < 0.2) {
+                                this.textHotspotSquares.add(index);
+                            }
+                        }
+                        // Once a square is revealed, it stays revealed while hovering
+                    });
+                    
+                    this.updateHoverEffect();
+                    
+                    // Continue the effect while hovering
+                    if (this.isOverTextHotspot) {
+                        setTimeout(activateRandomSquares, 200); // Check every 200ms
+                    }
+                };
+                
+                activateRandomSquares();
+            }
+
+            startTextHotspotClear() {
+                // Gradually clear squares over time
+                const clearRandomSquares = () => {
+                    if (this.isOverTextHotspot || this.textHotspotSquares.size === 0) {
+                        return; // Stop clearing if mouse re-enters or all squares are cleared
+                    }
+                    
+                    // 70% chance per check to clear a random square (much more aggressive)
+                    if (Math.random() < 0.7) {
+                        const revealedArray = Array.from(this.textHotspotSquares);
+                        if (revealedArray.length > 0) {
+                            const randomIndex = revealedArray[Math.floor(Math.random() * revealedArray.length)];
+                            this.textHotspotSquares.delete(randomIndex);
+                            this.updateHoverEffect();
+                        }
+                    }
+                    
+                    // Continue clearing every 80-150ms (much faster)
+                    if (this.textHotspotSquares.size > 0 && !this.isOverTextHotspot) {
+                        this.textHotspotClearTimer = setTimeout(clearRandomSquares, Math.random() * 70 + 80);
+                    }
+                };
+                
+                clearRandomSquares();
+            }
+
+            isSquareInTextHotspot(square) {
+                const textBounds = {
+                    left: 20,
+                    top: window.innerHeight - 20 - 200, // Approximate text height
+                    right: 20 + 517,
+                    bottom: window.innerHeight - 20
+                };
+                
+                return (square.x < textBounds.right && 
+                        square.x + square.width > textBounds.left &&
+                        square.y < textBounds.bottom && 
+                        square.y + square.height > textBounds.top);
             }
 
             startTouchDecay() {
@@ -570,6 +665,13 @@
                 setTimeout(() => this.randomTouchDecay(), Math.random() * 500 + 300);
             }
 
+            updateCursor() {
+                if (this.customCursor && this.mousePos.x > -500) {
+                    this.customCursor.style.left = (this.mousePos.x - 4) + 'px';
+                    this.customCursor.style.top = (this.mousePos.y - 4) + 'px';
+                }
+            }
+
             updateHoverEffect() {
                 // Update hover indicator position (hidden)
                 if (this.mousePos.x > 0) {
@@ -580,13 +682,14 @@
                     this.hoverIndicator.style.display = 'none';
                 }
                 
-                // Update square colors
+                // Update square colors with text hotspot logic
                 this.squares.forEach((square, index) => {
                     const isInRadius = this.isSquareInRadius(square);
                     const isFlickering = this.flickeringSquares.has(square.index);
                     const isTouchRevealed = this.touchRevealedSquares.has(index);
+                    const isTextHotspotActive = this.textHotspotSquares.has(index);
                     
-                    if (isInRadius || isFlickering || isTouchRevealed) {
+                    if (isInRadius || isFlickering || isTouchRevealed || isTextHotspotActive) {
                         square.element.style.backgroundColor = 'transparent';
                     } else {
                         square.element.style.backgroundColor = 'black';
