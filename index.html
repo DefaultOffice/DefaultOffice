@@ -80,20 +80,7 @@
             scrollbar-width: none;
         }
 
-        /* Loading indicator */
-        .loading {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: #666;
-            font-size: 18px;
-            z-index: 1000;
-        }
-
-        .loading.hidden {
-            display: none;
-        }
+        /* Loading indicator - REMOVED */
 
         /* Logo with invert blend mode - now handles both text fallback and SVG */
         .logo {
@@ -219,18 +206,12 @@
                 this.customCursor = null;
                 
                 this.canvas = document.getElementById('grid-canvas');
-                this.loadingEl = document.getElementById('loading');
                 this.customCursor = document.getElementById('custom-cursor');
                 
                 this.initializeGrid();
                 this.setupEventListeners();
                 this.startFlickering();
                 this.handleResize();
-                
-                // Hide loading indicator
-                setTimeout(() => {
-                    this.loadingEl.classList.add('hidden');
-                }, 500);
             }
 
             initializeGrid() {
