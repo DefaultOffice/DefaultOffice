@@ -81,7 +81,7 @@
             display: none;
         }
 
-        /* Logo with invert blend mode */
+        /* Logo with invert blend mode - now handles both text fallback and SVG */
         .logo {
             position: fixed;
             top: 50%;
@@ -95,6 +95,13 @@
             pointer-events: none;
             user-select: none;
             letter-spacing: 2px;
+        }
+
+        .logo svg {
+            width: auto;
+            height: 60px;
+            fill: white;
+            mix-blend-mode: difference;
         }
 
         /* Background text - on top but black */
@@ -148,9 +155,33 @@
         <a href="mailto:hello@defaultoffice.com">Email</a>
     </div>
     <div id="grid-canvas"></div>
-    <div class="logo">Default Office</div>
+    <div class="logo" id="logo">Default Office</div>
 
     <script>
+        // Logo loader - checks for logo.svg and loads it if available
+        function loadLogo() {
+            const logoElement = document.getElementById('logo');
+            
+            // Try to load logo.svg
+            fetch('./logo.svg')
+                .then(response => {
+                    if (response.ok) {
+                        return response.text();
+                    }
+                    throw new Error('Logo not found');
+                })
+                .then(svgContent => {
+                    // Replace text with SVG
+                    logoElement.innerHTML = svgContent;
+                })
+                .catch(() => {
+                    // Keep the default text if SVG fails to load
+                    console.log('No logo.svg found, using default text');
+                });
+        }
+
+        // Load logo on page load
+        loadLogo();
         class InteractiveGrid {
             constructor() {
                 this.canvasWidth = window.innerWidth;
