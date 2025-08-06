@@ -510,16 +510,16 @@
                     }
                 });
                 
-                // Start 8-second timer for random decay
+                // Start 10-second timer for random decay
                 this.touchDecayTimer = setTimeout(() => {
                     this.touchDecaying = true;
                     this.randomTouchDecay();
-                }, 8000);
+                }, 10000);
                 
-                // Force complete end after 10 seconds
+                // Force complete end after 20 seconds (total)
                 this.touchForceEndTimer = setTimeout(() => {
                     this.forceEndTouchReveal();
-                }, 10000);
+                }, 20000);
             }
 
             forceEndTouchReveal() {
