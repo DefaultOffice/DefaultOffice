@@ -205,7 +205,9 @@
 
             .social-links {
                 bottom: 20px;
-                right: 20px;
+                left: 20px;
+                right: auto;
+                text-align: left;
                 gap: 6px;
             }
 
@@ -473,6 +475,32 @@
                         this.isTouch = true;
                         this.updateCursor();
                         this.updateHoverEffect();
+                        
+                        // Check if touch is over text hotspot area during drag
+                        const textElement = document.querySelector('.background-text');
+                        if (textElement) {
+                            const rect = textElement.getBoundingClientRect();
+                            const touchX = e.touches[0].clientX;
+                            const touchY = e.touches[0].clientY;
+                            
+                            if (touchX >= rect.left && touchX <= rect.right && 
+                                touchY >= rect.top && touchY <= rect.bottom) {
+                                if (!this.isOverTextHotspot) {
+                                    this.isOverTextHotspot = true;
+                                    // Cancel any ongoing clear process
+                                    if (this.textHotspotClearTimer) {
+                                        clearTimeout(this.textHotspotClearTimer);
+                                    }
+                                    this.startTextHotspotEffect();
+                                }
+                                this.isCurrentlyTouchingText = true;
+                                clearTimeout(this.touchTextTimer);
+                                this.touchTextTimer = setTimeout(() => {
+                                    this.isCurrentlyTouchingText = false;
+                                }, 100);
+                            }
+                        }
+                        
                         // Cancel decay when user touches again
                         if (this.touchDecayTimer) {
                             clearTimeout(this.touchDecayTimer);
