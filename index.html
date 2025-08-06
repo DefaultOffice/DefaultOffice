@@ -282,6 +282,10 @@
                 this.hoverRadius = this.baseSize * radiusMultiplier;
                 
                 this.mousePos = { x: -1000, y: -1000 };
+                this.lastTouchPos = { x: -1000, y: -1000 };
+                this.isTouch = false;
+                this.touchDecayTimer = null;
+                this.touchDecaying = false;
                 this.squares = [];
                 this.flickeringSquares = new Set();
                 this.timers = [];
@@ -377,14 +381,35 @@
                     if (e.touches.length > 0) {
                         this.mousePos.x = e.touches[0].clientX;
                         this.mousePos.y = e.touches[0].clientY;
+                        this.lastTouchPos.x = e.touches[0].clientX;
+                        this.lastTouchPos.y = e.touches[0].clientY;
+                        this.isTouch = true;
+                        this.updateCursor();
                         this.updateHoverEffect();
+                        // Cancel decay when user touches again
+                        if (this.touchDecayTimer) {
+                            clearTimeout(this.touchDecayTimer);
+                        }
+                        this.touchDecaying = false;
+                        // Cancel decay when user touches again
+                        if (this.touchDecayTimer) {
+                            clearTimeout(this.touchDecayTimer);
+                        }
+                        this.touchDecaying = false;
+                        // Cancel decay when user touches again
+                        if (this.touchDecayTimer) {
+                            clearTimeout(this.touchDecayTimer);
+                        }
+                        this.touchDecaying = false;
                     }
                 });
 
                 this.canvas.addEventListener('touchend', () => {
-                    this.mousePos.x = -1000;
-                    this.mousePos.y = -1000;
+                    // Keep the effect at the last touch position instead of hiding
+                    this.mousePos.x = this.lastTouchPos.x;
+                    this.mousePos.y = this.lastTouchPos.y;
                     this.updateHoverEffect();
+                    this.startTouchDecay();
                 });
 
                 this.canvas.addEventListener('touchstart', (e) => {
@@ -392,8 +417,33 @@
                     if (e.touches.length > 0) {
                         this.mousePos.x = e.touches[0].clientX;
                         this.mousePos.y = e.touches[0].clientY;
+                        this.lastTouchPos.x = e.touches[0].clientX;
+                        this.lastTouchPos.y = e.touches[0].clientY;
+                        this.isTouch = true;
+                        this.updateCursor();
                         this.updateHoverEffect();
                     }
+                });
+
+                // Global touch events
+                document.addEventListener('touchmove', (e) => {
+                    if (e.touches.length > 0) {
+                        this.mousePos.x = e.touches[0].clientX;
+                        this.mousePos.y = e.touches[0].clientY;
+                        this.lastTouchPos.x = e.touches[0].clientX;
+                        this.lastTouchPos.y = e.touches[0].clientY;
+                        this.isTouch = true;
+                        this.updateCursor();
+                        this.updateHoverEffect();
+                    }
+                });
+
+                document.addEventListener('touchend', () => {
+                    // Keep the effect at the last touch position
+                    this.mousePos.x = this.lastTouchPos.x;
+                    this.mousePos.y = this.lastTouchPos.y;
+                    this.updateHoverEffect();
+                    this.startTouchDecay();
                 });
             }
 
@@ -429,6 +479,61 @@
                 if (this.customCursor && this.mousePos.x > -500) {
                     this.customCursor.style.left = (this.mousePos.x - 4) + 'px';
                     this.customCursor.style.top = (this.mousePos.y - 4) + 'px';
+                }
+            }
+
+            startTouchDecay() {
+                // Clear any existing decay timer
+                if (this.touchDecayTimer) {
+                    clearTimeout(this.touchDecayTimer);
+                }
+                
+                // Reset decay state
+                this.touchDecaying = false;
+                
+                // Start 15-second timer
+                this.touchDecayTimer = setTimeout(() => {
+                    this.touchDecaying = true;
+                    this.randomTouchDecay();
+                }, 15000);
+            }
+
+            randomTouchDecay() {
+                if (!this.touchDecaying || !this.isTouch) return;
+                
+                // Random chance to start fading (20% chance per check)
+                if (Math.random() < 0.2) {
+                    // Gradually move touch position off-screen over 2-4 seconds
+                    const duration = Math.random() * 2000 + 2000; // 2-4 seconds
+                    const startTime = Date.now();
+                    const startX = this.lastTouchPos.x;
+                    const startY = this.lastTouchPos.y;
+                    
+                    const fadeOut = () => {
+                        const elapsed = Date.now() - startTime;
+                        const progress = Math.min(elapsed / duration, 1);
+                        
+                        // Ease out the fade
+                        const easeProgress = 1 - Math.pow(1 - progress, 3);
+                        
+                        // Move position gradually off-screen
+                        this.mousePos.x = startX + ((-1000 - startX) * easeProgress);
+                        this.mousePos.y = startY + ((-1000 - startY) * easeProgress);
+                        this.updateHoverEffect();
+                        
+                        if (progress < 1) {
+                            requestAnimationFrame(fadeOut);
+                        } else {
+                            // Fully faded
+                            this.touchDecaying = false;
+                            this.isTouch = false;
+                        }
+                    };
+                    
+                    fadeOut();
+                } else {
+                    // Try again in 500ms to 2 seconds
+                    setTimeout(() => this.randomTouchDecay(), Math.random() * 1500 + 500);
                 }
             }
 
