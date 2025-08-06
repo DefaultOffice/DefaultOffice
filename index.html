@@ -25,6 +25,17 @@
             box-sizing: border-box;
         }
 
+        /* Text selection styling */
+        ::selection {
+            background-color: black;
+            color: white;
+        }
+
+        ::-moz-selection {
+            background-color: black;
+            color: white;
+        }
+
         html, body {
             height: 100%;
             overflow: hidden;
@@ -93,7 +104,7 @@
             color: black;
             z-index: 50;
             pointer-events: auto;
-            user-select: none;
+            user-select: text;
             font-family: 'Suisse Intl', sans-serif;
             font-weight: 400;
             cursor: default;
@@ -307,6 +318,8 @@
                 this.isOverTextHotspot = false;
                 this.textHotspotSquares = new Set();
                 this.textHotspotClearTimer = null;
+                this.isCurrentlyTouchingText = false;
+                this.touchTextTimer = null;
                 this.squares = [];
                 this.flickeringSquares = new Set();
                 this.timers = [];
@@ -475,14 +488,15 @@
                 document.addEventListener('touchend', () => {
                     // Keep the effect at the last touch position
                     this.mousePos.x = this.lastTouchPos.x;
-                    this.mousePos.y = this.lastTouchPos.y;
+                    this.mousePos.y = e.lastTouchPos.y;
                     this.updateHoverEffect();
                     this.startTouchDecay();
                 });
 
-                // Text hotspot events
+                // Text hotspot events - works on both desktop and mobile
                 const textElement = document.querySelector('.background-text');
                 if (textElement) {
+                    // Desktop mouse events
                     textElement.addEventListener('mouseenter', () => {
                         this.isOverTextHotspot = true;
                         // Cancel any ongoing clear process
@@ -495,6 +509,37 @@
                     textElement.addEventListener('mouseleave', () => {
                         this.isOverTextHotspot = false;
                         this.startTextHotspotClear();
+                    });
+
+                    // Mobile touch events for text hotspot
+                    textElement.addEventListener('touchstart', (e) => {
+                        // Don't prevent default here - we want text selection to work
+                        this.isOverTextHotspot = true;
+                        // Cancel any ongoing clear process
+                        if (this.textHotspotClearTimer) {
+                            clearTimeout(this.textHotspotClearTimer);
+                        }
+                        this.startTextHotspotEffect();
+                    });
+
+                    // Use a longer delay for mobile before clearing
+                    textElement.addEventListener('touchend', () => {
+                        setTimeout(() => {
+                            if (!this.isCurrentlyTouchingText) {
+                                this.isOverTextHotspot = false;
+                                this.startTextHotspotClear();
+                            }
+                        }, 3000); // 3 second delay before starting to clear
+                    });
+
+                    // Track if user is actively touching the text area
+                    textElement.addEventListener('touchmove', (e) => {
+                        this.isCurrentlyTouchingText = true;
+                        // Reset after a short delay
+                        clearTimeout(this.touchTextTimer);
+                        this.touchTextTimer = setTimeout(() => {
+                            this.isCurrentlyTouchingText = false;
+                        }, 100);
                     });
                 }
             }
