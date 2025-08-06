@@ -167,6 +167,38 @@
         .social-links a:hover {
             opacity: 0.5;
         }
+
+        /* Mobile styles */
+        @media (max-width: 768px) {
+            .background-text {
+                width: calc(100vw - 40px);
+                bottom: 80px;
+                font-size: 13px;
+            }
+
+            .social-links {
+                bottom: 20px;
+                right: 20px;
+                gap: 6px;
+            }
+
+            .social-links .copyright,
+            .social-links a {
+                font-size: 13px;
+            }
+
+            .social-links .links-row {
+                gap: 15px;
+            }
+
+            .logo {
+                font-size: 36px;
+            }
+
+            .logo svg {
+                height: 170px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -239,8 +271,16 @@
             constructor() {
                 this.canvasWidth = window.innerWidth;
                 this.canvasHeight = window.innerHeight;
-                this.baseSize = (this.canvasWidth / 32) * 4; // Base size so 32 small (0.25x) squares fit across
-                this.hoverRadius = this.baseSize * 0.75;
+                this.isMobile = window.innerWidth <= 768;
+                
+                // Mobile adjustments
+                const baseSquares = this.isMobile ? 26 : 32; // 20% larger grid (fewer squares)
+                this.baseSize = (this.canvasWidth / baseSquares) * 4;
+                
+                // Mobile touch radius is 50% bigger
+                const radiusMultiplier = this.isMobile ? 1.125 : 0.75; // 1.125 = 0.75 * 1.5
+                this.hoverRadius = this.baseSize * radiusMultiplier;
+                
                 this.mousePos = { x: -1000, y: -1000 };
                 this.squares = [];
                 this.flickeringSquares = new Set();
@@ -369,8 +409,15 @@
                     // Recalculate dimensions
                     this.canvasWidth = window.innerWidth;
                     this.canvasHeight = window.innerHeight;
-                    this.baseSize = (this.canvasWidth / 32) * 4; // 32 small squares (0.25x) fit across width
-                    this.hoverRadius = this.baseSize * 0.75;
+                    this.isMobile = window.innerWidth <= 768;
+                    
+                    // Mobile adjustments
+                    const baseSquares = this.isMobile ? 26 : 32; // 20% larger grid (fewer squares)
+                    this.baseSize = (this.canvasWidth / baseSquares) * 4;
+                    
+                    // Mobile touch radius is 50% bigger
+                    const radiusMultiplier = this.isMobile ? 1.125 : 0.75; // 1.125 = 0.75 * 1.5
+                    this.hoverRadius = this.baseSize * radiusMultiplier;
                     
                     // Reinitialize
                     this.initializeGrid();
