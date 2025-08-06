@@ -5,6 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Interactive Grid</title>
     <style>
+        @font-face {
+            font-family: 'Suisse Intl';
+            src: url('./SuisseIntl-Medium.otf') format('opentype');
+            font-weight: 500;
+            font-style: normal;
+        }
+
+        @font-face {
+            font-family: 'Suisse Intl';
+            src: url('./SuisseIntl-Light.otf') format('opentype');
+            font-weight: 300;
+            font-style: normal;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -16,7 +30,7 @@
             overflow: hidden;
             background: white;
             cursor: none;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: 'Suisse Intl', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
 
         /* Custom cursor */
@@ -109,13 +123,20 @@
             position: fixed;
             bottom: 20px;
             left: 20px;
-            width: 300px;
+            width: 450px;
             font-size: 14px;
             line-height: 1.6;
             color: black;
             z-index: 50;
             pointer-events: none;
             user-select: none;
+            font-family: 'Suisse Intl', sans-serif;
+            font-weight: 500;
+        }
+
+        .background-text .clients {
+            font-weight: 300;
+            margin-top: 1em;
         }
 
         /* Social links - bottom right */
@@ -127,6 +148,7 @@
             flex-direction: column;
             gap: 8px;
             z-index: 50;
+            text-align: right;
         }
 
         .social-links a {
@@ -135,6 +157,8 @@
             font-size: 14px;
             pointer-events: auto;
             transition: opacity 0.2s ease;
+            font-family: 'Suisse Intl', sans-serif;
+            font-weight: 300;
         }
 
         .social-links a:hover {
@@ -146,13 +170,12 @@
     <div class="loading" id="loading">Generating interactive grid...</div>
     <div class="custom-cursor" id="custom-cursor"></div>
     <div class="background-text">
-        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+        Default office is an industrial design studio based in West London. Directed by Alex D'Souza and Joe Ground, Default Office works across climate and consumer technology, homeware and furniture. Our design ideology and services are employed by hardware start-ups and international organisations in the US, Europe and Asia.<br><br><span class="clients">Selected Clients: Lunar Energy, Daylight Computer, JosephJoseph, Unilever, Air-Up, Wild Energy, Opal Camera, Tom Dixon.</span>
     </div>
     <div class="social-links">
-        <a href="https://instagram.com" target="_blank">Instagram</a>
-        <a href="https://linkedin.com" target="_blank">LinkedIn</a>
-        <a href="https://twitter.com" target="_blank">Twitter</a>
-        <a href="mailto:hello@defaultoffice.com">Email</a>
+        <a href="https://www.instagram.com/defaultoffice_/" target="_blank">Instagram</a>
+        <a href="https://www.linkedin.com/in/alexjosephdsouza/" target="_blank">LinkedIn</a>
+        <a href="mailto:contact@defaultoffice.com">contact@defaultoffice.com</a>
     </div>
     <div id="grid-canvas"></div>
     <div class="logo" id="logo">Default Office</div>
