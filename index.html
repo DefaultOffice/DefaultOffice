@@ -331,17 +331,15 @@
                             element: null
                         };
                         
-                        // Create DOM element
+                        // Create DOM element with sub-pixel fix
                         const squareElement = document.createElement('div');
                         squareElement.className = 'grid-square';
-                        squareElement.style.width = Math.ceil(width) + 'px';
-                        squareElement.style.height = Math.ceil(height) + 'px';
-                        squareElement.style.left = Math.floor(x) + 'px';
-                        squareElement.style.top = Math.floor(y) + 'px';
+                        squareElement.style.width = (width + 0.5) + 'px';
+                        squareElement.style.height = (height + 0.5) + 'px';
+                        squareElement.style.left = x + 'px';
+                        squareElement.style.top = y + 'px';
                         squareElement.style.backgroundColor = 'black';
-                        squareElement.style.border = 'none';
-                        squareElement.style.margin = '0';
-                        squareElement.style.padding = '0';
+                        squareElement.style.transform = 'translate3d(0,0,0)';
                         
                         this.canvas.appendChild(squareElement);
                         squareData.element = squareElement;
@@ -350,7 +348,7 @@
                         x += width;
                         squareIndex++;
                     }
-                    y += this.baseSize * 0.25; // Use smallest square size for row increment
+                    y += this.baseSize * 0.25;
                 }
                 
                 // Create hover indicator (hidden)
