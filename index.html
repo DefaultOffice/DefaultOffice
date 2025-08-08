@@ -176,9 +176,10 @@
             color: white;
             mix-blend-mode: difference;
             z-index: 100;
-            pointer-events: none;
+            pointer-events: auto;
             user-select: none;
             letter-spacing: 2px;
+            cursor: pointer;
         }
 
         .logo svg {
@@ -186,136 +187,14 @@
             height: 225px;
             fill: white;
             mix-blend-mode: difference;
+            pointer-events: auto;
+            cursor: pointer;
         }
 
         /* Large screen adjustments */
         @media (min-width: 1440px) {
             .logo {
                 font-size: 58px;
-            triggerEasterEgg() {
-                if (this.isEasterEggActive) return; // Prevent multiple activations
-                
-                this.isEasterEggActive = true;
-                console.log('🎉 Easter egg activated!');
-                
-                // Clear existing flicker timers
-                this.timers.forEach(timer => clearTimeout(timer));
-                this.timers = [];
-                this.flickeringSquares.clear();
-                
-                // Start exciting patterns
-                this.startEasterEggPatterns();
-                
-                // Return to normal after 10 seconds
-                this.easterEggTimer = setTimeout(() => {
-                    this.endEasterEgg();
-                }, 10000);
-            }
-
-            startEasterEggPatterns() {
-                let patternPhase = 0;
-                const totalSquares = this.squares.length;
-                
-                const runPattern = () => {
-                    if (!this.isEasterEggActive) return;
-                    
-                    // Clear previous pattern
-                    this.flickeringSquares.clear();
-                    
-                    switch(patternPhase % 5) {
-                        case 0: // Wave from left to right
-                            this.createWavePattern();
-                            break;
-                        case 1: // Spiral from center
-                            this.createSpiralPattern();
-                            break;
-                        case 2: // Random burst
-                            this.createRandomBurstPattern();
-                            break;
-                        case 3: // Checkerboard
-                            this.createCheckerboardPattern();
-                            break;
-                        case 4: // Diagonal sweep
-                            this.createDiagonalPattern();
-                            break;
-                    }
-                    
-                    this.updateHoverEffect();
-                    patternPhase++;
-                    
-                    // Change pattern every 500ms
-                    setTimeout(runPattern, 500);
-                };
-                
-                runPattern();
-            }
-
-            createWavePattern() {
-                const time = Date.now() / 200;
-                this.squares.forEach((square, index) => {
-                    const wavePosition = (square.x / this.canvasWidth) * Math.PI * 2;
-                    if (Math.sin(wavePosition + time) > 0) {
-                        this.flickeringSquares.add(index);
-                    }
-                });
-            }
-
-            createSpiralPattern() {
-                const centerX = this.canvasWidth / 2;
-                const centerY = this.canvasHeight / 2;
-                const time = Date.now() / 300;
-                
-                this.squares.forEach((square, index) => {
-                    const dx = square.x + square.width/2 - centerX;
-                    const dy = square.y + square.height/2 - centerY;
-                    const distance = Math.sqrt(dx*dx + dy*dy);
-                    const angle = Math.atan2(dy, dx);
-                    
-                    if (Math.sin(distance/50 - time + angle) > 0.3) {
-                        this.flickeringSquares.add(index);
-                    }
-                });
-            }
-
-            createRandomBurstPattern() {
-                const revealCount = Math.floor(this.squares.length * (0.3 + Math.random() * 0.4));
-                const shuffled = [...Array(this.squares.length).keys()].sort(() => Math.random() - 0.5);
-                
-                for (let i = 0; i < revealCount; i++) {
-                    this.flickeringSquares.add(shuffled[i]);
-                }
-            }
-
-            createCheckerboardPattern() {
-                const cellSize = this.baseSize;
-                this.squares.forEach((square, index) => {
-                    const gridX = Math.floor(square.x / cellSize);
-                    const gridY = Math.floor(square.y / cellSize);
-                    if ((gridX + gridY) % 2 === 0) {
-                        this.flickeringSquares.add(index);
-                    }
-                });
-            }
-
-            createDiagonalPattern() {
-                const time = Date.now() / 400;
-                this.squares.forEach((square, index) => {
-                    const diagonalPos = (square.x + square.y) / 100;
-                    if (Math.sin(diagonalPos + time) > 0) {
-                        this.flickeringSquares.add(index);
-                    }
-                });
-            }
-
-            endEasterEgg() {
-                this.isEasterEggActive = false;
-                this.flickeringSquares.clear();
-                
-                // Restart normal flickering
-                this.startFlickering();
-                this.updateHoverEffect();
-                
-                console.log('✨ Easter egg ended - back to normal');
             }
 
             .logo svg {
@@ -332,13 +211,16 @@
             .social-links {
                 bottom: 20px;
                 left: 20px;
-                right: auto;
+                right: 20px;
                 text-align: left;
                 gap: 0;
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: baseline;
             }
 
             .social-links .copyright {
-                margin-bottom: 1em;
+                margin-bottom: 0;
             }
 
             .social-links .copyright,
@@ -348,6 +230,7 @@
 
             .social-links .links-row {
                 gap: 15px;
+                margin-left: auto;
             }
 
             .logo {
@@ -356,6 +239,17 @@
 
             .logo svg {
                 height: 170px;
+            }
+        }
+
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .background-text {
+                font-size: 14px;
+            }
+
+            .social-links .copyright,
+            .social-links a {
+                font-size: 14px;
             }
         }
     </style>
@@ -386,28 +280,7 @@
                 .then(response => {
                     if (response.ok) {
                         return response.text();
-                    // Logo easter egg click handler
-                const logoElement = document.getElementById('logo');
-                if (logoElement) {
-                    logoElement.style.cursor = 'pointer';
-                    logoElement.style.pointerEvents = 'auto';
-                    
-                    logoElement.addEventListener('click', () => {
-                        this.logoClickCount++;
-                        
-                        // Reset click count after 2 seconds of no clicks
-                        clearTimeout(this.logoClickTimer);
-                        this.logoClickTimer = setTimeout(() => {
-                            this.logoClickCount = 0;
-                        }, 2000);
-                        
-                        // Trigger easter egg on 6th click
-                        if (this.logoClickCount === 6) {
-                            this.triggerEasterEgg();
-                            this.logoClickCount = 0; // Reset
-                        }
-                    });
-                }
+                    }
                     throw new Error('Logo not found');
                 })
                 .then(svgContent => {
@@ -479,6 +352,7 @@
                 this.hoverIndicator = null;
                 this.customCursor = null;
                 this.logoClickCount = 0;
+                this.logoClickTimer = null;
                 this.isEasterEggActive = false;
                 this.easterEggTimer = null;
                 
@@ -677,7 +551,7 @@
                 document.addEventListener('touchend', () => {
                     // Keep the effect at the last touch position
                     this.mousePos.x = this.lastTouchPos.x;
-                    this.mousePos.y = e.lastTouchPos.y;
+                    this.mousePos.y = this.lastTouchPos.y;
                     this.updateHoverEffect();
                     this.startTouchDecay();
                 });
@@ -729,6 +603,26 @@
                         this.touchTextTimer = setTimeout(() => {
                             this.isCurrentlyTouchingText = false;
                         }, 100);
+                    });
+                }
+
+                // Logo easter egg click handler
+                const logoElement = document.getElementById('logo');
+                if (logoElement) {
+                    logoElement.addEventListener('click', () => {
+                        this.logoClickCount++;
+                        
+                        // Reset click count after 2 seconds of no clicks
+                        clearTimeout(this.logoClickTimer);
+                        this.logoClickTimer = setTimeout(() => {
+                            this.logoClickCount = 0;
+                        }, 2000);
+                        
+                        // Trigger easter egg on 6th click
+                        if (this.logoClickCount === 6) {
+                            this.triggerEasterEgg();
+                            this.logoClickCount = 0; // Reset
+                        }
                     });
                 }
             }
@@ -845,6 +739,11 @@
                     clearTimeout(this.touchForceEndTimer);
                 }
                 
+                // If over text hotspot, don't start decay - let hotspot handle it
+                if (this.isOverTextHotspot) {
+                    return;
+                }
+                
                 // Reset decay state
                 this.touchDecaying = false;
                 
@@ -856,16 +755,14 @@
                     }
                 });
                 
-                // Start 10-second timer for random decay
-                this.touchDecayTimer = setTimeout(() => {
-                    this.touchDecaying = true;
-                    this.randomTouchDecay();
-                }, 10000);
+                // Start immediate decay for regular touch areas (not text hotspot)
+                this.touchDecaying = true;
+                this.randomTouchDecay();
                 
-                // Force complete end after 20 seconds (total)
+                // Force complete end after 15 seconds (total)
                 this.touchForceEndTimer = setTimeout(() => {
                     this.forceEndTouchReveal();
-                }, 20000);
+                }, 15000);
             }
 
             forceEndTouchReveal() {
@@ -895,8 +792,8 @@
                     return;
                 }
                 
-                // Random chance to turn off a square (25% chance per check)
-                if (Math.random() < 0.25) {
+                // Higher chance to turn off a square (50% chance per check - increased rate)
+                if (Math.random() < 0.5) {
                     // Pick a random revealed square to turn off
                     const revealedArray = Array.from(this.touchRevealedSquares);
                     const randomIndex = revealedArray[Math.floor(Math.random() * revealedArray.length)];
@@ -906,8 +803,8 @@
                     this.updateHoverEffect();
                 }
                 
-                // Continue checking every 300-800ms
-                setTimeout(() => this.randomTouchDecay(), Math.random() * 500 + 300);
+                // Continue checking every 150-350ms (faster intervals)
+                setTimeout(() => this.randomTouchDecay(), Math.random() * 200 + 150);
             }
 
             updateCursor() {
@@ -975,6 +872,131 @@
                     
                     this.timers[index] = setTimeout(flicker, randomDelay);
                 });
+            }
+
+            triggerEasterEgg() {
+                if (this.isEasterEggActive) return; // Prevent multiple activations
+                
+                this.isEasterEggActive = true;
+                console.log('🎉 Easter egg activated!');
+                
+                // Clear existing flicker timers
+                this.timers.forEach(timer => clearTimeout(timer));
+                this.timers = [];
+                this.flickeringSquares.clear();
+                
+                // Start exciting patterns
+                this.startEasterEggPatterns();
+                
+                // Return to normal after 10 seconds
+                this.easterEggTimer = setTimeout(() => {
+                    this.endEasterEgg();
+                }, 10000);
+            }
+
+            startEasterEggPatterns() {
+                let patternPhase = 0;
+                
+                const runPattern = () => {
+                    if (!this.isEasterEggActive) return;
+                    
+                    // Clear previous pattern
+                    this.flickeringSquares.clear();
+                    
+                    switch(patternPhase % 5) {
+                        case 0: // Wave from left to right
+                            this.createWavePattern();
+                            break;
+                        case 1: // Spiral from center
+                            this.createSpiralPattern();
+                            break;
+                        case 2: // Random burst
+                            this.createRandomBurstPattern();
+                            break;
+                        case 3: // Checkerboard
+                            this.createCheckerboardPattern();
+                            break;
+                        case 4: // Diagonal sweep
+                            this.createDiagonalPattern();
+                            break;
+                    }
+                    
+                    this.updateHoverEffect();
+                    patternPhase++;
+                    
+                    // Change pattern every 500ms
+                    setTimeout(runPattern, 500);
+                };
+                
+                runPattern();
+            }
+
+            createWavePattern() {
+                const time = Date.now() / 200;
+                this.squares.forEach((square, index) => {
+                    const wavePosition = (square.x / this.canvasWidth) * Math.PI * 2;
+                    if (Math.sin(wavePosition + time) > 0) {
+                        this.flickeringSquares.add(index);
+                    }
+                });
+            }
+
+            createSpiralPattern() {
+                const centerX = this.canvasWidth / 2;
+                const centerY = this.canvasHeight / 2;
+                const time = Date.now() / 300;
+                
+                this.squares.forEach((square, index) => {
+                    const dx = square.x + square.width/2 - centerX;
+                    const dy = square.y + square.height/2 - centerY;
+                    const distance = Math.sqrt(dx*dx + dy*dy);
+                    const angle = Math.atan2(dy, dx);
+                    
+                    if (Math.sin(distance/50 - time + angle) > 0.3) {
+                        this.flickeringSquares.add(index);
+                    }
+                });
+            }
+
+            createRandomBurstPattern() {
+                const revealCount = Math.floor(this.squares.length * (0.3 + Math.random() * 0.4));
+                const shuffled = [...Array(this.squares.length).keys()].sort(() => Math.random() - 0.5);
+                
+                for (let i = 0; i < revealCount; i++) {
+                    this.flickeringSquares.add(shuffled[i]);
+                }
+            }
+
+            createCheckerboardPattern() {
+                const cellSize = this.baseSize;
+                this.squares.forEach((square, index) => {
+                    const gridX = Math.floor(square.x / cellSize);
+                    const gridY = Math.floor(square.y / cellSize);
+                    if ((gridX + gridY) % 2 === 0) {
+                        this.flickeringSquares.add(index);
+                    }
+                });
+            }
+
+            createDiagonalPattern() {
+                const time = Date.now() / 400;
+                this.squares.forEach((square, index) => {
+                    const diagonalPos = (square.x + square.y) / 100;
+                    if (Math.sin(diagonalPos + time) > 0) {
+                        this.flickeringSquares.add(index);
+                    }
+                });
+            }
+
+            endEasterEgg() {
+                this.isEasterEggActive = false;
+                this.flickeringSquares.clear();
+                
+                // Restart normal flickering
+                this.startFlickering();
+                this.updateHoverEffect();
+                
+                console.log('✨ Easter egg ended - back to normal');
             }
         }
 
