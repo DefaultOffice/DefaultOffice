@@ -808,10 +808,10 @@
 
             startFlickering() {
                 this.squares.forEach((square, index) => {
-                    const randomDelay = Math.random() * 5000 + 1000; // 1-6 second initial delay
+                    const randomDelay = Math.random() * 8000 + 2000; // 2-10 second initial delay (much slower)
                     
                     const flicker = () => {
-                        if (Math.random() < 0.15) { // 15% chance to toggle
+                        if (Math.random() < 0.12) { // 12% chance to toggle (reduced from 15%)
                             if (this.flickeringSquares.has(index)) {
                                 this.flickeringSquares.delete(index);
                             } else {
@@ -820,8 +820,8 @@
                             this.updateHoverEffect();
                         }
                         
-                        // Set next random flicker time
-                        const nextDelay = Math.random() * 4000 + 500; // 0.5-4.5 second intervals
+                        // Set next random flicker time - much slower
+                        const nextDelay = Math.random() * 6000 + 1000; // 1-7 second intervals
                         this.timers[index] = setTimeout(flicker, nextDelay);
                     };
                     
