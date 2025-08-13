@@ -348,6 +348,7 @@
                 this.timers = [];
                 this.hoverIndicator = null;
                 this.customCursor = null;
+                this.audioContext = null;
                 
                 this.canvas = document.getElementById('grid-canvas');
                 this.customCursor = document.getElementById('custom-cursor');
@@ -497,6 +498,11 @@
                         this.updateCursor();
                         this.updateHoverEffect();
                         
+                        // Haptic feedback for general movement
+                        if (Math.random() < 0.1) { // 10% chance per move to avoid spam
+                            this.triggerHapticFeedback();
+                        }
+                        
                         // Check if touch is over text hotspot area during drag
                         const textElement = document.querySelector('.background-text');
                         if (textElement) {
@@ -629,19 +635,8 @@
             }
 
             startTextHotspotEffect() {
-                // Trigger haptic feedback on iOS when entering text hotspot
-                if (navigator.vibrate) {
-                    navigator.vibrate(50); // Android vibration
-                }
-                // iOS haptic feedback (if supported)
-                if (window.DeviceMotionEvent && typeof DeviceMotionEvent.requestPermission === 'function') {
-                    // iOS 13+ haptic feedback
-                    try {
-                        if (navigator.vibrate) navigator.vibrate(50);
-                    } catch (e) {
-                        console.log('Haptic feedback not supported');
-                    }
-                }
+                // Enhanced haptic feedback for iOS
+                this.triggerHapticFeedback();
                 
                 // Find all squares in the text area
                 const textAreaSquares = [];
@@ -655,16 +650,23 @@
                 const activateRandomSquares = () => {
                     if (!this.isOverTextHotspot) return;
                     
+                    let anyNewReveals = false;
                     textAreaSquares.forEach(index => {
                         // Only check squares that aren't already revealed
                         if (!this.textHotspotSquares.has(index)) {
                             // 20% chance per check to turn transparent and stay transparent
                             if (Math.random() < 0.2) {
                                 this.textHotspotSquares.add(index);
+                                anyNewReveals = true;
                             }
                         }
                         // Once a square is revealed, it stays revealed while hovering
                     });
+                    
+                    // Haptic feedback for each reveal
+                    if (anyNewReveals) {
+                        this.triggerHapticFeedback();
+                    }
                     
                     this.updateHoverEffect();
                     
@@ -675,6 +677,58 @@
                 };
                 
                 activateRandomSquares();
+            }
+
+            triggerHapticFeedback() {
+                // Multiple methods to trigger haptic feedback on iOS
+                try {
+                    // Method 1: Web Vibration API
+                    if (navigator.vibrate) {
+                        navigator.vibrate(30);
+                    }
+                    
+                    // Method 2: iOS-specific haptic feedback
+                    if (window.navigator && window.navigator.vibrate) {
+                        window.navigator.vibrate([30]);
+                    }
+                    
+                    // Method 3: AudioContext-based approach for iOS Safari
+                    if (!this.audioContext) {
+                        try {
+                            this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                        } catch (e) {
+                            // AudioContext not supported
+                        }
+                    }
+                    
+                    if (this.audioContext) {
+                        // Create brief silent audio to trigger iOS haptic
+                        const oscillator = this.audioContext.createOscillator();
+                        const gainNode = this.audioContext.createGain();
+                        
+                        oscillator.connect(gainNode);
+                        gainNode.connect(this.audioContext.destination);
+                        
+                        gainNode.gain.setValueAtTime(0, this.audioContext.currentTime);
+                        oscillator.frequency.setValueAtTime(0, this.audioContext.currentTime);
+                        
+                        oscillator.start();
+                        oscillator.stop(this.audioContext.currentTime + 0.03);
+                    }
+                    
+                    // Method 4: Force touch simulation (iOS specific)
+                    if (window.DeviceMotionEvent) {
+                        // Trigger a brief animation that might activate haptics
+                        document.body.style.transform = 'scale(1.001)';
+                        setTimeout(() => {
+                            document.body.style.transform = '';
+                        }, 30);
+                    }
+                    
+                } catch (error) {
+                    // Haptic feedback not supported
+                    console.log('Haptic feedback not available');
+                }
             }
 
             startTextHotspotClear() {
