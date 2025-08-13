@@ -352,6 +352,7 @@
                 this.demoFadeTimer = null;
                 this.hasUserInteracted = false;
                 this.isDemoActive = false;
+                this.shouldActivateHotspotOnTouch = false;
                 
                 this.canvas = document.getElementById('grid-canvas');
                 this.customCursor = document.getElementById('custom-cursor');
@@ -735,12 +736,12 @@
                 // Start demo after 2 seconds if no user interaction
                 this.demoTimer = setTimeout(() => {
                     if (!this.hasUserInteracted) {
-                        this.isDemoActive = true;
-                        this.startDemoHotspotEffect();
+                        // Instead of auto-revealing, prepare to activate on first touch
+                        this.shouldActivateHotspotOnTouch = true;
                         
-                        // Fade demo after 10 seconds
+                        // Cancel this after 10 seconds (so after 12 seconds total)
                         this.demoFadeTimer = setTimeout(() => {
-                            this.fadeDemoHotspotEffect();
+                            this.shouldActivateHotspotOnTouch = false;
                         }, 10000);
                     }
                 }, 2000);
@@ -758,15 +759,15 @@
                     }
                 });
                 
-                // Randomly activate squares over time with much slower probability for demo
+                // Randomly activate squares over time with normal speed
                 const activateRandomSquares = () => {
-                    if (!this.isDemoActive) return;
+                    if (!this.isOverTextHotspot) return;
                     
                     textAreaSquares.forEach(index => {
                         // Only check squares that aren't already revealed
                         if (!this.textHotspotSquares.has(index)) {
-                            // 6.7% chance per check (3x slower than normal 20%)
-                            if (Math.random() < 0.067) {
+                            // Normal 20% chance per check for instant activation
+                            if (Math.random() < 0.2) {
                                 this.textHotspotSquares.add(index);
                             }
                         }
@@ -774,8 +775,8 @@
                     
                     this.updateHoverEffect();
                     
-                    // Continue the effect while demo is active - same interval as normal
-                    if (this.isDemoActive) {
+                    // Continue the effect while hotspot is active
+                    if (this.isOverTextHotspot) {
                         setTimeout(activateRandomSquares, 200);
                     }
                 };
@@ -784,12 +785,17 @@
             }
 
             fadeDemoHotspotEffect() {
-                this.isDemoActive = false;
                 this.isOverTextHotspot = false;
                 this.startTextHotspotClear();
             }
 
             markUserInteraction() {
+                // Check if we should activate hotspot on first touch
+                if (this.shouldActivateHotspotOnTouch && !this.hasUserInteracted) {
+                    this.startDemoHotspotEffect();
+                    this.shouldActivateHotspotOnTouch = false;
+                }
+                
                 this.hasUserInteracted = true;
                 
                 // Clear demo timers
@@ -798,13 +804,6 @@
                 }
                 if (this.demoFadeTimer) {
                     clearTimeout(this.demoFadeTimer);
-                }
-                
-                // Stop demo if active
-                if (this.isDemoActive) {
-                    this.isDemoActive = false;
-                    this.isOverTextHotspot = false;
-                    this.startTextHotspotClear();
                 }
             }
 
