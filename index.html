@@ -629,6 +629,20 @@
             }
 
             startTextHotspotEffect() {
+                // Trigger haptic feedback on iOS when entering text hotspot
+                if (navigator.vibrate) {
+                    navigator.vibrate(50); // Android vibration
+                }
+                // iOS haptic feedback (if supported)
+                if (window.DeviceMotionEvent && typeof DeviceMotionEvent.requestPermission === 'function') {
+                    // iOS 13+ haptic feedback
+                    try {
+                        if (navigator.vibrate) navigator.vibrate(50);
+                    } catch (e) {
+                        console.log('Haptic feedback not supported');
+                    }
+                }
+                
                 // Find all squares in the text area
                 const textAreaSquares = [];
                 this.squares.forEach((square, index) => {
