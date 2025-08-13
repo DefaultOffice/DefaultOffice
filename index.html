@@ -348,7 +348,6 @@
                 this.timers = [];
                 this.hoverIndicator = null;
                 this.customCursor = null;
-                this.hasUserInteracted = false;
                 
                 this.canvas = document.getElementById('grid-canvas');
                 this.customCursor = document.getElementById('custom-cursor');
@@ -437,8 +436,6 @@
                 // Touch events for mobile
                 this.canvas.addEventListener('touchmove', (e) => {
                     e.preventDefault();
-                    this.markUserInteraction(); // Mark interaction
-                    
                     if (e.touches.length > 0) {
                         this.mousePos.x = e.touches[0].clientX;
                         this.mousePos.y = e.touches[0].clientY;
@@ -460,8 +457,6 @@
                 });
 
                 this.canvas.addEventListener('touchend', () => {
-                    this.markUserInteraction(); // Mark interaction
-                    
                     // Keep the effect at the last touch position instead of hiding
                     this.mousePos.x = this.lastTouchPos.x;
                     this.mousePos.y = this.lastTouchPos.y;
@@ -471,8 +466,6 @@
 
                 this.canvas.addEventListener('touchstart', (e) => {
                     e.preventDefault();
-                    this.markUserInteraction(); // Mark interaction
-                    
                     if (e.touches.length > 0) {
                         this.mousePos.x = e.touches[0].clientX;
                         this.mousePos.y = e.touches[0].clientY;
@@ -495,8 +488,6 @@
 
                 // Global touch events
                 document.addEventListener('touchmove', (e) => {
-                    this.markUserInteraction(); // Mark interaction
-                    
                     if (e.touches.length > 0) {
                         this.mousePos.x = e.touches[0].clientX;
                         this.mousePos.y = e.touches[0].clientY;
@@ -506,34 +497,51 @@
                         this.updateCursor();
                         this.updateHoverEffect();
                         
-                        // Check if touch is over text hotspot area during drag
-                        const textElement = document.querySelector('.background-text');
-                        if (textElement) {
-                            const rect = textElement.getBoundingClientRect();
-                            const touchX = e.touches[0].clientX;
-                            const touchY = e.touches[0].clientY;
-                            
-                            if (touchX >= rect.left && touchX <= rect.right && 
-                                touchY >= rect.top && touchY <= rect.bottom) {
-                                if (!this.isOverTextHotspot) {
-                                    this.isOverTextHotspot = true;
-                                    // Cancel any ongoing clear process
-                                    if (this.textHotspotClearTimer) {
-                                        clearTimeout(this.textHotspotClearTimer);
-                                    }
-                                    this.startTextHotspotEffect();
+                        // On mobile, any touch activates text hotspot
+                        if (this.isMobile) {
+                            if (!this.isOverTextHotspot) {
+                                this.isOverTextHotspot = true;
+                                // Cancel any ongoing clear process
+                                if (this.textHotspotClearTimer) {
+                                    clearTimeout(this.textHotspotClearTimer);
                                 }
-                                this.isCurrentlyTouchingText = true;
-                                clearTimeout(this.touchTextTimer);
-                                this.touchTextTimer = setTimeout(() => {
-                                    this.isCurrentlyTouchingText = false;
-                                }, 100);
-                            } else {
-                                // Touch is outside text area - start clearing if we were in hotspot
-                                if (this.isOverTextHotspot) {
-                                    this.isOverTextHotspot = false;
-                                    this.isCurrentlyTouchingText = false;
-                                    this.startTextHotspotClear();
+                                this.startTextHotspotEffect();
+                            }
+                            this.isCurrentlyTouchingText = true;
+                            clearTimeout(this.touchTextTimer);
+                            this.touchTextTimer = setTimeout(() => {
+                                this.isCurrentlyTouchingText = false;
+                            }, 100);
+                        } else {
+                            // Desktop: Check if touch is over text hotspot area during drag
+                            const textElement = document.querySelector('.background-text');
+                            if (textElement) {
+                                const rect = textElement.getBoundingClientRect();
+                                const touchX = e.touches[0].clientX;
+                                const touchY = e.touches[0].clientY;
+                                
+                                if (touchX >= rect.left && touchX <= rect.right && 
+                                    touchY >= rect.top && touchY <= rect.bottom) {
+                                    if (!this.isOverTextHotspot) {
+                                        this.isOverTextHotspot = true;
+                                        // Cancel any ongoing clear process
+                                        if (this.textHotspotClearTimer) {
+                                            clearTimeout(this.textHotspotClearTimer);
+                                        }
+                                        this.startTextHotspotEffect();
+                                    }
+                                    this.isCurrentlyTouchingText = true;
+                                    clearTimeout(this.touchTextTimer);
+                                    this.touchTextTimer = setTimeout(() => {
+                                        this.isCurrentlyTouchingText = false;
+                                    }, 100);
+                                } else {
+                                    // Touch is outside text area - start clearing if we were in hotspot
+                                    if (this.isOverTextHotspot) {
+                                        this.isOverTextHotspot = false;
+                                        this.isCurrentlyTouchingText = false;
+                                        this.startTextHotspotClear();
+                                    }
                                 }
                             }
                         }
@@ -551,13 +559,21 @@
                 });
 
                 document.addEventListener('touchend', () => {
-                    this.markUserInteraction(); // Mark interaction
-                    
                     // Keep the effect at the last touch position
                     this.mousePos.x = this.lastTouchPos.x;
                     this.mousePos.y = this.lastTouchPos.y;
                     this.updateHoverEffect();
                     this.startTouchDecay();
+                    
+                    // On mobile, always start text hotspot clear when touch ends
+                    if (this.isMobile) {
+                        setTimeout(() => {
+                            if (!this.isCurrentlyTouchingText) {
+                                this.isOverTextHotspot = false;
+                                this.startTextHotspotClear();
+                            }
+                        }, 3000); // 3 second delay before starting to clear
+                    }
                 });
 
                 // Text hotspot events - works on both desktop and mobile
