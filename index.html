@@ -348,11 +348,7 @@
                 this.timers = [];
                 this.hoverIndicator = null;
                 this.customCursor = null;
-                this.demoTimer = null;
-                this.demoFadeTimer = null;
                 this.hasUserInteracted = false;
-                this.isDemoActive = false;
-                this.shouldActivateHotspotOnTouch = false;
                 
                 this.canvas = document.getElementById('grid-canvas');
                 this.customCursor = document.getElementById('custom-cursor');
@@ -361,11 +357,6 @@
                 this.setupEventListeners();
                 this.startFlickering();
                 this.handleResize();
-                
-                // Start demo sequence on mobile if no interaction
-                if (this.isMobile) {
-                    this.startDemoSequence();
-                }
             }
 
             initializeGrid() {
@@ -732,79 +723,13 @@
                         square.y + square.height > textBounds.top);
             }
 
-            startDemoSequence() {
-                // Start demo after 2 seconds if no user interaction
-                this.demoTimer = setTimeout(() => {
-                    if (!this.hasUserInteracted) {
-                        // Instead of auto-revealing, prepare to activate on first touch
-                        this.shouldActivateHotspotOnTouch = true;
-                        
-                        // Cancel this after 10 seconds (so after 12 seconds total)
-                        this.demoFadeTimer = setTimeout(() => {
-                            this.shouldActivateHotspotOnTouch = false;
-                        }, 10000);
-                    }
-                }, 2000);
-            }
-
-            startDemoHotspotEffect() {
-                // Simulate text hotspot activation
-                this.isOverTextHotspot = true;
-                
-                // Find all squares in the text area
-                const textAreaSquares = [];
-                this.squares.forEach((square, index) => {
-                    if (this.isSquareInTextHotspot(square)) {
-                        textAreaSquares.push(index);
-                    }
-                });
-                
-                // Randomly activate squares over time with normal speed
-                const activateRandomSquares = () => {
-                    if (!this.isOverTextHotspot) return;
-                    
-                    textAreaSquares.forEach(index => {
-                        // Only check squares that aren't already revealed
-                        if (!this.textHotspotSquares.has(index)) {
-                            // Normal 20% chance per check for instant activation
-                            if (Math.random() < 0.2) {
-                                this.textHotspotSquares.add(index);
-                            }
-                        }
-                    });
-                    
-                    this.updateHoverEffect();
-                    
-                    // Continue the effect while hotspot is active
-                    if (this.isOverTextHotspot) {
-                        setTimeout(activateRandomSquares, 200);
-                    }
-                };
-                
-                activateRandomSquares();
-            }
-
-            fadeDemoHotspotEffect() {
-                this.isOverTextHotspot = false;
-                this.startTextHotspotClear();
-            }
-
             markUserInteraction() {
-                // Check if we should activate hotspot on first touch
-                if (this.shouldActivateHotspotOnTouch && !this.hasUserInteracted) {
-                    this.startDemoHotspotEffect();
-                    this.shouldActivateHotspotOnTouch = false;
+                // On mobile, if this is the first interaction, activate text hotspot
+                if (this.isMobile && !this.hasUserInteracted) {
+                    this.startTextHotspotEffect();
                 }
                 
                 this.hasUserInteracted = true;
-                
-                // Clear demo timers
-                if (this.demoTimer) {
-                    clearTimeout(this.demoTimer);
-                }
-                if (this.demoFadeTimer) {
-                    clearTimeout(this.demoFadeTimer);
-                }
             }
 
             startTouchDecay() {
