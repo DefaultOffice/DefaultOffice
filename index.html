@@ -758,15 +758,15 @@
                     }
                 });
                 
-                // Randomly activate squares over time with higher probability
+                // Randomly activate squares over time with much slower probability for demo
                 const activateRandomSquares = () => {
                     if (!this.isDemoActive) return;
                     
                     textAreaSquares.forEach(index => {
                         // Only check squares that aren't already revealed
                         if (!this.textHotspotSquares.has(index)) {
-                            // 20% chance per check to turn transparent and stay transparent
-                            if (Math.random() < 0.2) {
+                            // 6.7% chance per check (3x slower than normal 20%)
+                            if (Math.random() < 0.067) {
                                 this.textHotspotSquares.add(index);
                             }
                         }
@@ -774,7 +774,7 @@
                     
                     this.updateHoverEffect();
                     
-                    // Continue the effect while demo is active
+                    // Continue the effect while demo is active - same interval as normal
                     if (this.isDemoActive) {
                         setTimeout(activateRandomSquares, 200);
                     }
